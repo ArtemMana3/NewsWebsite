@@ -8,7 +8,7 @@
 import UIKit
 import WebKit
 
-class WebViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler {
+class WebViewController: UIViewController, WKNavigationDelegate {
     private var webView: WKWebView!
     private var progressView: UIProgressView!
     var url: URL = URL(string: "https://theatlasnews.co/ml-api/v2/list")!
@@ -28,6 +28,7 @@ class WebViewController: UIViewController, WKNavigationDelegate, WKScriptMessage
     func configureWebView() {
         webView.load(URLRequest(url: url))
         webView.allowsBackForwardNavigationGestures = true
+        title = "Atlas News"
         setToolbar()
         webView.addObserver(self,
                             forKeyPath: #keyPath(WKWebView.estimatedProgress),
@@ -48,16 +49,18 @@ class WebViewController: UIViewController, WKNavigationDelegate, WKScriptMessage
     }
     
     func setupWebView() {
-        guard let path = Bundle.main.path(forResource: "jsCode", ofType: "js") else {
+        guard let jsCodePath = Bundle.main.path(forResource: "jsCode", ofType: "js") else {
             print("Incorrect filepath")
             return
         }
-        guard let jsCode = try? String(contentsOfFile: path) else {
-            print("Something went wrong with converting path into string")
+        guard let jsCode = try? String(contentsOfFile: jsCodePath) else {
+            print("Something went wrong when converting the path to a string")
             return
         }
                 
-        let userScript = WKUserScript.init(source: jsCode, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
+        let userScript = WKUserScript.init(source: jsCode,
+                                           injectionTime: .atDocumentEnd,
+                                           forMainFrameOnly: true)
         webView.configuration.userContentController.addUserScript(userScript)
         webView.configuration.userContentController.add(self, name: "messenger")
     }
@@ -78,17 +81,17 @@ class WebViewController: UIViewController, WKNavigationDelegate, WKScriptMessage
         }
         decisionHandler(.cancel)
     }
-    
+}
+
+extension WebViewController: WKScriptMessageHandler {
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        print(message.body)
-        if let vc = storyboard?.instantiateViewController(withIdentifier: "WebView") as? ViewController {
-            guard let url = URL(string: "https://theatlasnews.co/ml-api/v2/post?post_id=\(message.body)") else {
-                print("Incorrect URL")
-                return
-            }
-            vc.url = url
-            navigationController?.pushViewController(vc, animated: true)
+        let vc = WebViewController()
+        guard let url = URL(string: "https://theatlasnews.co/ml-api/v2/post?post_id=\(message.body)") else {
+            print("Incorrect URL")
+            return
         }
+        vc.url = url
+        navigationController?.pushViewController(vc, animated: true)
     }
 }
 
