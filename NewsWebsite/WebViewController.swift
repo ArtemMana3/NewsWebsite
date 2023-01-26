@@ -8,14 +8,13 @@
 import UIKit
 import WebKit
 
-class WebViewController: UIViewController, WKNavigationDelegate {
+class WebViewController: UIViewController {
     private var webView: WKWebView!
     private var progressView: UIProgressView!
     var url: URL = URL(string: "https://theatlasnews.co/ml-api/v2/list")!
 
     override func loadView() {
         webView = WKWebView()
-        webView.navigationDelegate = self
         view = webView
     }
     
@@ -29,14 +28,14 @@ class WebViewController: UIViewController, WKNavigationDelegate {
         webView.load(URLRequest(url: url))
         webView.allowsBackForwardNavigationGestures = true
         title = "Atlas News"
-        setToolbar()
+        configureToolbar()
         webView.addObserver(self,
                             forKeyPath: #keyPath(WKWebView.estimatedProgress),
                             options: .new,
                             context: nil)
     }
     
-    func setToolbar() {
+    func configureToolbar() {
         let space = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         let refresh = UIBarButtonItem(barButtonSystemItem: .refresh, target: webView, action: #selector(webView.reload))
         
@@ -70,28 +69,17 @@ class WebViewController: UIViewController, WKNavigationDelegate {
             progressView.progress = Float(webView.estimatedProgress)
         }
     }
-    
-    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-        let url = navigationAction.request.url
-        if let host = url?.host {
-            if host.contains("theatlasnews.co") {
-                decisionHandler(.allow)
-                return
-            }
-        }
-        decisionHandler(.cancel)
-    }
 }
 
 extension WebViewController: WKScriptMessageHandler {
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        let vc = WebViewController()
         guard let url = URL(string: "https://theatlasnews.co/ml-api/v2/post?post_id=\(message.body)") else {
             print("Incorrect URL")
             return
         }
-        vc.url = url
-        navigationController?.pushViewController(vc, animated: true)
+        let webVC = WebViewController()
+        webVC.url = url
+        navigationController?.pushViewController(webVC, animated: true)
     }
 }
 

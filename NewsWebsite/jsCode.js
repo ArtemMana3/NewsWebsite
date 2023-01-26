@@ -1,13 +1,12 @@
-var counter = 0
+var elementNumber = 0
 let observer = new MutationObserver(function(mutations) {
     var elements = document.getElementsByClassName('list-item');
-    var elementsArray = Array.from(elements);
-    var necessaryElements = elementsArray.slice(counter)
+    var necessaryElements = Array.from(elements).slice(elementNumber)
     necessaryElements.forEach((element) => {
         element.addEventListener('click', function() {
             getPostId(element);
         });
-        counter = counter + 1
+        elementNumber = elementNumber + 1
     })
 });
 
